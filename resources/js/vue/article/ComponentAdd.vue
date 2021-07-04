@@ -56,7 +56,7 @@
 
 import CKEditor from "@ckeditor/ckeditor5-build-classic"
 import Swal from "sweetalert2"
-import axios from "axios"
+import {mapActions} from "vuex";
 
 export default {
     data() {
@@ -67,58 +67,34 @@ export default {
         }
     },
     methods: {
-        async formSubmit() {
+        ...mapActions(["addArticle", "getArticles"]),
+        formSubmit() {
 
-            Swal.fire({
-                title: 'Posting...',
-                text: 'Please Wait',
-                timerProgressBar: true,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                }
-            })
-            var errorMessage = []
-            await axios.post('/api/article', {
-                title: this.title,
-                body: this.content.getData()
-            })
-                .then(function (response) {
+            const data = {title: this.title, body: this.content.getData()}
+            this.addArticle(data)
+                .then(response => {
+                    Swal.fire({
+                        title: response.data.title,
+                        text: response.data.message,
+                        icon: response.data.icon,
+                        confirmButtonText: "Cool!"
+                    })
                     if (response.status == 200) {
-                        Swal.fire({
-                            title: response.data.title,
-                            text: response.data.message,
-                            icon: response.data.icon,
-                            confirmButtonText: "Cool!"
-                        })
+                        this.$el.querySelector('#title').classList.remove("is-invalid")
+                        this.errors = []
+                        this.title = ''
+                        this.content.setData("")
+                        this.getArticles()
                     }
                     if (response.status == 201) {
-
-                        errorMessage = response.data.error
-                        Swal.fire({
-                            title: response.data.title,
-                            html: response.data.message,
-                            icon: response.data.icon,
-                            confirmButtonText: "Cool!"
-                        })
+                        this.$el.querySelector('#title').classList.add("is-invalid")
+                        this.errors = response.data.error
                     }
                 })
                 .catch(function (error) {
                     console.log(error)
                 })
-
-            if (errorMessage.length != 0) {
-                this.$el.querySelector('#title').classList.add("is-invalid")
-                this.errors = errorMessage
-            } else {
-                this.errors = []
-                this.title = ''
-                this.content.setData("")
-            }
-            this.$store.dispatch("getArticles")
         },
-
-
     },
     mounted() {
         CKEditor

@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" @click="close" class="btn btn-secondary rounded-pill poppins"
+                    <button type="button" class="btn btn-secondary rounded-pill poppins"
                             data-bs-dismiss="modal">
                         Close
                     </button>
@@ -58,7 +58,7 @@
 
 import CKEditor from "@ckeditor/ckeditor5-build-classic"
 import Swal from "sweetalert2"
-import axios from "axios"
+import {mapActions} from 'vuex'
 
 export default {
     data() {
@@ -69,53 +69,32 @@ export default {
         }
     },
     methods: {
-        async formSubmit() {
-            Swal.fire({
-                title: 'Updating...',
-                text: 'Please Wait',
-                timerProgressBar: true,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                }
-            })
-            var errorMessage = []
-            await axios.patch('/api/article/' + this.article.id, {
-                title: this.title,
-                body: this.content.getData()
-            })
-                .then(function (response) {
+        ...mapActions(["updateArticle", "getArticles"]),
+        formSubmit() {
+            const data = {id: this.article.id, title: this.title, body: this.content.getData()}
+            this.updateArticle(data)
+                .then(response => {
+                    Swal.fire({
+                        title: response.data.title,
+                        html: response.data.message,
+                        icon: response.data.icon,
+                        confirmButtonText: "Cool!"
+                    })
                     if (response.status == 200) {
-                        Swal.fire({
-                            title: response.data.title,
-                            text: response.data.message,
-                            icon: response.data.icon,
-                            confirmButtonText: "Cool!"
-                        })
+                        this.$el.querySelector('#updateTitle').classList.remove("is-invalid")
+                        this.errors = []
+                        this.getArticles()
                     }
                     if (response.status == 201) {
-
-                        errorMessage = response.data.error
-                        Swal.fire({
-                            title: response.data.title,
-                            html: response.data.message,
-                            icon: response.data.icon,
-                            confirmButtonText: "Cool!"
-                        })
+                        this.$el.querySelector('#updateTitle').classList.add("is-invalid")
+                        this.errors = response.data.error
                     }
                 })
                 .catch(function (error) {
                     console.log(error)
                 })
 
-            if (errorMessage.length != 0) {
-                this.$el.querySelector('#updateTitle').classList.add("is-invalid")
-                this.errors = errorMessage
-            }
-            this.$store.dispatch("getArticles")
-        },
-        close() {
-            this.$store.dispatch("getArticles")
+
         },
     },
     computed: {
@@ -126,7 +105,7 @@ export default {
         }
     },
     watch: {
-        article(newCount, oldCount) {
+        article(newCount) {
             this.content.setData(newCount.body)
         }
     },

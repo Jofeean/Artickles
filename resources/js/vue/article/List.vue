@@ -25,7 +25,7 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuLink">
                                 <li><a class="dropdown-item" data-bs-toggle="modal"
                                        data-bs-target="#updateArticleModal" @click="update(article)">Edit</a></li>
-                                <li><a class="dropdown-item" @click="$emit('delete-article', article.id)">Delete</a>
+                                <li><a class="dropdown-item" @click="$emit('delete-article', article)">Delete</a>
                                 </li>
                             </ul>
 
@@ -58,11 +58,13 @@
 </template>
 
 <script>
+import {mapMutations} from 'vuex'
 
 export default {
     methods: {
+        ...mapMutations(["setPassed"]),
         update(data) {
-            this.$store.commit("setPassed", data)
+            this.setPassed(data)
         },
         dateDifference(date) {
             const strDate = new Date(date)

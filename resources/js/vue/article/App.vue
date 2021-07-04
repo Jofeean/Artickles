@@ -16,19 +16,16 @@
 </template>
 
 <script>
-import Swal from "sweetalert2";
-
 import List from "./List";
 import AddArticle from "./ComponentAdd";
 import UpdateArticle from "./ComponentUpdate";
+import {mapGetters, mapActions} from 'vuex'
 
 export default {
     computed: {
-        articles: {
-            get() {
-                return this.$store.state.articles.data
-            }
-        }
+        ...mapGetters({
+            articles: "getData"
+        })
     },
     components: {
         List, AddArticle, UpdateArticle
@@ -37,31 +34,9 @@ export default {
         this.$store.dispatch("getArticles")
     },
     methods: {
+        ...mapActions(['deleteArticle']),
         del(data) {
-            // console.log(data)
-            Swal.fire({
-                title: "Delete Article",
-                text: "Do you really want to delete this article?",
-                icon: "question",
-                confirmButtonText: "Yes",
-                showCancelButton: true,
-                cancelButtonText: "No"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    axios.delete('/api/article/' + data).then((response) => {
-                        Swal.fire(
-                            'Deleted!',
-                            'Article has been deleted.',
-                            'success'
-                        ).then(result => {
-                            this.$store.dispatch("getArticles")
-                        })
-                    })
-                        .catch(function (error) {
-                            console.log(error)
-                        })
-                }
-            })
+            this.deleteArticle(data)
         }
     }
 }
